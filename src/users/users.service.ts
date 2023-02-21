@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose/dist';
+import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { InjectModel } from '@nestjs/mongoose/dist';
 import { User, UserDocument } from './entities/user.entity';
-import { Model } from 'mongoose';
 
 @Injectable()
 export class UsersService {
@@ -12,6 +12,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   create(createUserDto: CreateUserDto) {
+    // inserindo as variaveis dentro do modelo e salvando o usuário.
     const user = new this.userModel(createUserDto);
     return user.save(); 
   }
@@ -19,16 +20,32 @@ export class UsersService {
   findAll() {
     return this.userModel.find();
   }
-
+// procurando os dados pelo id
   findOne(id: string) {
     return this.userModel.findById(id);
   }
 
   update(id: string, updateUserDto: UpdateUserDto) {
-    return ;
+    return this.userModel.findByIdAndUpdate(
+      {
+        _id: id,
+      },
+      {
+        // sem o atributo set: ele serve para alterar os campos que eu quero. 
+        $set: updateUserDto,
+      },
+      {
+        // essa atribuição é indispençavel pois ela pega as informações do objeto que eu quero alterar e altera no meu banco de dados, se não tiver essa opção ele não salva as alterações.
+        new: true,
+      },
+    );
   }
 
   remove(id: string) {
-    return ;
+    return this.userModel.deleteOne({
+      _id: id,
+    })
+    // para conseguir executar essa operação.
+    .exec();
   }
 }
